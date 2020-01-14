@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  app-server:
+    build:
+      context: ./app
+    image: app-server:latest
+    container_name: 'app-server'
+    restart: 'always'
+    ports:
+      - "9001:80"
+    environment:
+      - DATABASE_HOST=app-db
+    volumes:
+      - "./app:/var/www/html"
+      - "./apache/000-default.conf:/etc/apache2/sites-enabled/000-default.conf"
+      - "./apache/wait-for.sh:/"
+    command: ["chown", "-R", "www-data:www-data", "/var/www/html"]
+    depends_on:
+      - db-api
+
+  app-db:
+    image: ./mysql
+    container_name: 'app-db'
+    ports:
+      - 6033:3306
+    environment:
+      MYSQL_DATABASE: 'application_db'
+      MYSQL_USER: 'application_user'
+      MYSQL_PASSWORD: '123456'
+      MYSQL_ROOT_PASSWORD: '123456'
+
+  app-db-migration:
+    image: app-server:latest
+    container_name: 'app-db-migration'
+    command: /bin/sh -c "/wait-for.sh app-db:3306 -t 120 -- php /var/www/html/httpdocs/shared_libs/migrate.php"
+    links:
+      - db-api
+    depends_on:
+      - db-api
