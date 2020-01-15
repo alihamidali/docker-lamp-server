@@ -1,6 +1,7 @@
 # docker-LAMP
 
 *Directory Structure*
+    
     .
     ├── apache                            # apache config folder
     │   ├── 000-default.conf              # vhost file
